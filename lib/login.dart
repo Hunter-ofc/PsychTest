@@ -3,7 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:fluttertestproject/home.dart';
-import 'package:http/http.dart' as http;
+
+import 'package:dio/dio.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -17,22 +18,30 @@ class LoginPageState extends State<LoginPage> {
 
   login() async {
 
-    final url = Uri.parse('http://dev-api.commicado.io/auth/login');
-    final headers = {"Content-type": "application/json"};
-    final json = '{"email": ${emailController.text}, "password": ${passwordController.text}}';
+    var dio = Dio();
 
-    print(json);
+    Map<String, dynamic> body = {
+      "email":emailController.text,
+      "password": passwordController.text
+    };
 
-    final response = await http.post(url, headers: headers, body: json);
-    print('Status code: ${response.statusCode}');
-    print('Body: ${response.body}');
+    FormData formData = new FormData.fromMap(body);
 
-    if (response.statusCode == 201) {
-      print(response);
-      Navigator.of(context).push(MaterialPageRoute(builder: (context) => Home()));
-    } else {
-      return print("Something went wrong");
+    var response = await dio.post('http://dev-api.commicado.io/auth/login', data: formData);
+
+    print(response.data["success"]);
+    print(response.data["data"]);
+    print(response.data["data"]["name"]);
+    print(response.data["data"]["status"].runtimeType);
+
+    String name = response.data["data"]["name"];
+    int status = response.data["data"]["status"];
+    String email = emailController.text;
+
+    if(response.data["success"] == true) {
+      Navigator.of(context).push(MaterialPageRoute(builder: (context) => Home(email, name, status)));
     }
+
   }
 
   @override
